@@ -24,10 +24,10 @@ async def start_admin_server():
     runner = web.AppRunner(app)
     await runner.setup()
     
-    # Start on port 8081
-    site = web.TCPSite(runner, 'localhost', 8081)
+    # Start on port 8081 (bind to all interfaces for Render)
+    site = web.TCPSite(runner, '0.0.0.0', 8081)
     await site.start()
-    logger.info("Admin HTTP server started on http://localhost:8081")
+    logger.info("Admin HTTP server started on http://0.0.0.0:8081")
     return runner
 
 async def main():
