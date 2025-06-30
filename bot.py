@@ -35,6 +35,14 @@ async def main():
     
     logger.info("Starting bot with token from environment...")
     
+    # Проверяем токен
+    if not settings.bot_token or len(settings.bot_token) < 10:
+        logger.error(f"Invalid bot token! Length: {len(settings.bot_token) if settings.bot_token else 0}")
+        logger.error(f"Token starts with: {settings.bot_token[:10] if settings.bot_token else 'None'}...")
+        return
+    
+    logger.info(f"Bot token loaded successfully. Length: {len(settings.bot_token)}")
+    
     # Bot initialization
     bot = Bot(
         token=settings.bot_token,
