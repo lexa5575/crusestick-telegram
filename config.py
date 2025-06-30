@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 
 # Принудительно загружаем .env файл если он есть
 load_dotenv()
+# Также пробуем загрузить из разных возможных путей на Render
+load_dotenv('/opt/render/project/src/.env')
+load_dotenv('./.env')
 
 # Отладочная информация
 print("DEBUG: Environment variables:")
