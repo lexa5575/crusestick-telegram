@@ -33,13 +33,7 @@ async def start_admin_server():
 async def main():
     """Main bot startup function"""
     
-    # Загружаем конфигурацию из Laravel
-    logger.info("Loading configuration from Laravel...")
-    await settings.load_from_laravel()
-    
-    if not settings.bot_token:
-        logger.error("Bot token not found in configuration!")
-        return
+    logger.info("Starting bot with token from environment...")
     
     # Bot initialization
     bot = Bot(
