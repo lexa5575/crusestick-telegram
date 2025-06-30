@@ -9,10 +9,6 @@ load_dotenv()
 load_dotenv('/opt/render/project/src/.env')
 load_dotenv('./.env')
 
-# Отладочная информация
-print("DEBUG: Environment variables:")
-print(f"TELEGRAM_BOT_TOKEN exists: {'TELEGRAM_BOT_TOKEN' in os.environ}")
-print(f"TELEGRAM_BOT_TOKEN value length: {len(os.environ.get('TELEGRAM_BOT_TOKEN', ''))}")
 
 class Settings(BaseSettings):
     # Telegram Bot Token (from environment variable)
@@ -38,7 +34,6 @@ settings = Settings()
 # Если pydantic не читает токен, берем его напрямую из переменных окружения
 if not settings.bot_token and 'TELEGRAM_BOT_TOKEN' in os.environ:
     settings.bot_token = os.environ['TELEGRAM_BOT_TOKEN']
-    print(f"DEBUG: Token loaded directly from os.environ, length: {len(settings.bot_token)}")
 
 # Backward compatibility exports
 BOT_TOKEN = settings.bot_token
