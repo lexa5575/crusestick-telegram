@@ -32,5 +32,10 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Если pydantic не читает токен, берем его напрямую из переменных окружения
+if not settings.bot_token and 'TELEGRAM_BOT_TOKEN' in os.environ:
+    settings.bot_token = os.environ['TELEGRAM_BOT_TOKEN']
+    print(f"DEBUG: Token loaded directly from os.environ, length: {len(settings.bot_token)}")
+
 # Backward compatibility exports
 BOT_TOKEN = settings.bot_token
