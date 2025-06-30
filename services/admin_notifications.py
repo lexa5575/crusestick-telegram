@@ -49,13 +49,13 @@ async def notify_admins_new_order(order_data: Dict, user_data: Dict, bot: Bot = 
             [
                 InlineKeyboardButton(
                     text="💳 Назначить Zelle", 
-                    url=f"http://127.0.0.1:8000/admin/orders/{order_data['order_id']}"
+                    url=f"{settings.laravel_api_url}/admin/orders/{order_data['order_id']}"
                 )
             ],
             [
                 InlineKeyboardButton(
                     text="📋 Все заказы", 
-                    url="http://127.0.0.1:8000/admin/orders"
+                    url=f"{settings.laravel_api_url}/admin/orders"
                 )
             ]
         ])
