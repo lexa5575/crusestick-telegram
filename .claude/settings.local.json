@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source:*)",
+      "Bash(python:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(touch:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip install:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(timeout:*)",
+      "Bash(gtimeout:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(jobs)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)"
+    ],
+    "deny": []
+  }
+}

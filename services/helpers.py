@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 async def retry_async(func, max_retries: int = 3, delay: float = 1.0):
-    """Повторяет выполнение асинхронной функции при ошибке"""
+    """Retry async function execution on error"""
     for attempt in range(max_retries):
         try:
             return await func()
@@ -19,7 +19,7 @@ async def retry_async(func, max_retries: int = 3, delay: float = 1.0):
 
 
 def format_price(price_kopecks: int) -> str:
-    """Форматирует цену из копеек в рубли"""
+    """Format price from kopecks to rubles"""
     rubles = price_kopecks // 100
     kopecks = price_kopecks % 100
     

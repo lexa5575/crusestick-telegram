@@ -1,29 +1,56 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from pydantic import Field
+from typing import List, Optional
+import aiohttp
+import asyncio
+import logging
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-# Bot configuration
-BOT_TOKEN = os.getenv('BOT_TOKEN', '6947996106:AAFmi8lMK8TG4CTo1TTxJLHYCBieMv9-9Sk')
+class Settings(BaseSettings):
+    # Laravel API URL - можно задать через переменную окружения или изменить здесь
+    laravel_api_url: str = Field('http://localhost:8000', env='LARAVEL_API_URL')
+    
+    # Динамически загружаемые настройки из Laravel
+    bot_token: Optional[str] = None
+    debug: bool = True
+    telegram_api_url: str = 'https://api.telegram.org'
+    
+    # Заглушка для совместимости (не используется)
+    database_url: str = 'sqlite:///./temp.db'
+    
+    class Config:
+        env_file = '.env'
+        env_file_encoding = 'utf-8'
+        extra = 'ignore'
+    
+    async def load_from_laravel(self):
+        """Загрузка токена бота из Laravel API"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.laravel_api_url}/api/bot/token") as response:
+                    if response.status == 200:
+                        config = await response.json()
+                        
+                        # Получаем только токен из Laravel
+                        self.bot_token = config.get('token')
+                        
+                        if self.bot_token:
+                            logger.info("Bot token loaded from Laravel successfully")
+                            return True
+                        else:
+                            logger.error("No bot token in Laravel response")
+                    else:
+                        logger.warning(f"Laravel API returned status {response.status}")
+                        
+        except Exception as e:
+            logger.error(f"Failed to load token from Laravel: {e}")
+        
+        logger.error("Could not get bot token from Laravel!")
+        return False
 
-# Database configuration
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = int(os.getenv('DB_PORT', 5432))
-DB_NAME = os.getenv('DB_NAME', 'postgres')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '0000')
 
-# Database URL for SQLAlchemy
-DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+settings = Settings()
 
-# Redis configuration (optional)
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
-REDIS_DB = int(os.getenv('REDIS_DB', 0))
-
-# Logging
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-
-# API settings
-API_URL = os.getenv('API_URL', '')
-API_KEY = os.getenv('API_KEY', '')
+# Backward compatibility exports
+BOT_TOKEN = settings.bot_token

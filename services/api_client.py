@@ -1,60 +1,120 @@
 import aiohttp
-from typing import Optional, Dict, Any
-from config import API_URL, API_KEY
+import logging
+from typing import List, Dict, Optional
+from config import settings
 
+logger = logging.getLogger(__name__)
 
-class APIClient:
+class LaravelAPIClient:
     def __init__(self):
-        self.base_url = API_URL
-        self.api_key = API_KEY
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.base_url = settings.laravel_api_url
+        self.session = None
     
-    async def _get_session(self) -> aiohttp.ClientSession:
-        if self.session is None:
-            self.session = aiohttp.ClientSession()
-        return self.session
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession()
+        return self
     
-    async def close(self):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
     
-    async def _make_request(
-        self, 
-        method: str, 
-        endpoint: str, 
-        data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        session = await self._get_session()
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+    async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict:
+        """Базовый метод для HTTP запросов"""
+        url = f"{self.base_url}/api/bot{endpoint}"
         
-        headers = {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
+        logger.debug(f"Making {method} request to {url}")
+        
+        try:
+            async with self.session.request(method, url, **kwargs) as response:
+                logger.debug(f"Response status: {response.status}")
+                
+                if response.status in [200, 201]:
+                    result = await response.json()
+                    logger.debug(f"Response data: {result}")
+                    return result
+                elif response.status == 404:
+                    logger.warning(f"Resource not found: {url}")
+                    return {}
+                else:
+                    error_text = await response.text()
+                    logger.error(f"API request failed: {response.status} - {error_text}")
+                    return {}
+        except aiohttp.ClientError as e:
+            logger.error(f"HTTP client error: {e}")
+            return {}
+        except Exception as e:
+            logger.error(f"Unexpected API request error: {e}")
+            return {}
+    
+    async def get_products(self, category_id: Optional[int] = None, search: Optional[str] = None) -> List[Dict]:
+        """Получение списка товаров"""
+        params = {}
+        if category_id:
+            params['category_id'] = category_id
+        if search:
+            params['search'] = search
+            
+        response = await self._make_request('GET', '/products', params=params)
+        return response.get('data', [])
+    
+    async def get_categories(self) -> List[Dict]:
+        """Получение категорий"""
+        response = await self._make_request('GET', '/categories')
+        if isinstance(response, list):
+            return response
+        return response.get('data', [])
+    
+    async def create_or_update_user(self, user_data: Dict) -> Dict:
+        """Создание или обновление пользователя"""
+        return await self._make_request('POST', '/users', json=user_data)
+    
+    async def create_order(self, order_data: Dict) -> Dict:
+        """Создание заказа"""
+        return await self._make_request('POST', '/orders', json=order_data)
+    
+    
+    async def check_promocode(self, code: str) -> Dict:
+        """Проверка промокода"""
+        return await self._make_request('GET', f'/promocodes/{code}')
+    
+    async def get_user_orders(self, telegram_user_id: int) -> Dict:
+        """Получение заказов пользователя"""
+        logger.info(f"Getting orders for user {telegram_user_id}")
+        response = await self._make_request('GET', f'/users/{telegram_user_id}/orders')
+        
+        if not response:
+            logger.warning(f"No orders found for user {telegram_user_id}")
+            return {'orders': []}
+        
+        return response
+    
+    async def get_user_zelle(self, telegram_user_id: int) -> Dict:
+        """Получение Zelle данных пользователя"""
+        logger.info(f"Getting Zelle info for user {telegram_user_id}")
+        response = await self._make_request('GET', f'/users/{telegram_user_id}/zelle')
+        
+        if not response:
+            logger.warning(f"No Zelle data found for user {telegram_user_id}")
+            return {
+                'has_zelle': False,
+                'zelle_email': None
+            }
+        
+        # Laravel возвращает данные без обертки "data"
+        return response
+    
+    async def track_user_activity(self, telegram_user_id: int, activity_type: str, activity_data: dict) -> Dict:
+        """Отслеживание активности пользователя для системы напоминаний"""
+        logger.info(f"Tracking activity {activity_type} for user {telegram_user_id}")
+        
+        data = {
+            'telegram_user_id': telegram_user_id,
+            'activity_type': activity_type,
+            'activity_data': activity_data
         }
         
-        async with session.request(
-            method=method,
-            url=url,
-            json=data,
-            params=params,
-            headers=headers
-        ) as response:
-            response.raise_for_status()
-            return await response.json()
-    
-    async def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return await self._make_request('GET', endpoint, params=params)
-    
-    async def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return await self._make_request('POST', endpoint, data=data)
-    
-    async def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return await self._make_request('PUT', endpoint, data=data)
-    
-    async def delete(self, endpoint: str) -> Dict[str, Any]:
-        return await self._make_request('DELETE', endpoint)
-
+        response = await self._make_request('POST', '/user-activity', json_data=data)
+        return response or {}
 
 # Глобальный экземпляр клиента
-api_client = APIClient()
+api_client = LaravelAPIClient()

@@ -1,53 +1,142 @@
+from typing import Dict, List, Any
 from datetime import datetime
-from typing import List, Dict, Any
 
-
-def format_order_details(order: Dict[str, Any]) -> str:
-    """Форматирует детали заказа для отображения"""
-    text = f"🧾 Заказ #{order['id']}\n\n"
-    text += f"📅 Дата: {format_date(order['created_at'])}\n"
-    text += f"📍 Адрес: {order['address']}\n"
-    text += f"📦 Статус: {get_status_emoji(order['status'])} {order['status']}\n\n"
+def format_product_message(product: Dict) -> str:
+    """Product message formatting"""
     
-    text += "🛒 Товары:\n"
-    for item in order.get('items', []):
-        text += f"• {item['product_name']} x{item['quantity']} = {format_price(item['price'] * item['quantity'])}\n"
+    message = f"🛍️ <b>{product['name']}</b>\n\n"
     
-    text += f"\n💰 Итого: {format_price(order['total_amount'])}"
-    return text
-
-
-def format_product_card(product: Dict[str, Any]) -> str:
-    """Форматирует карточку товара"""
-    text = f"📦 {product['name']}\n\n"
+    message += f"💰 <b>Price: ${product['price']}</b>\n"
     
-    if product.get('description'):
-        text += f"📝 {product['description']}\n\n"
+    if product.get('category'):
+        message += f"📂 Category: {product['category']['name']}\n"
     
-    text += f"💰 Цена: {format_price(product['price'])}"
-    return text
+    # Show product description if available
+    if product.get('bot_description'):
+        message += f"\n📝 {product['bot_description']}"
+    elif product.get('description'):
+        message += f"\n📝 {product['description']}"
+    
+    return message
 
+def format_order_message(order: Dict) -> str:
+    """Order message formatting"""
+    
+    status_emoji = {
+        'pending': '⏳',
+        'paid': '✅',
+        'processing': '🔄',
+        'shipped': '📦',
+        'delivered': '🎉',
+        'cancelled': '❌'
+    }
+    
+    status_text = {
+        'pending': 'Pending Payment',
+        'paid': 'Paid',
+        'processing': 'Processing',
+        'shipped': 'Shipped',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+    }
+    
+    message = f"📦 <b>Order #{order['id']}</b>\n\n"
+    message += f"{status_emoji.get(order['status'], '❓')} <b>Status:</b> {status_text.get(order['status'], order['status'])}\n\n"
+    
+    message += "🛍️ <b>Products:</b>\n"
+    for item in order['products']:
+        message += f"• {item['name']} x{item['quantity']} = ${item['total']}\n"
+    
+    message += f"\n💰 <b>Total: ${order['total_amount']}</b>\n"
+    
+    if order.get('promocode'):
+        message += f"🎫 Promo code: {order['promocode']} (-${order['discount_amount']})\n"
+    
+    if order.get('tracking_number'):
+        message += f"📍 Tracking: <code>{order['tracking_number']}</code>\n"
+    
+    message += f"📅 Date: {order['created_at'][:10]}"
+    
+    return message
 
-def format_cart_summary(cart_items: List[Dict[str, Any]]) -> str:
-    """Форматирует содержимое корзины"""
+def format_cart_message(cart_items: List[Dict], total: float) -> str:
+    """Cart message formatting"""
+    
     if not cart_items:
-        return "🛒 Ваша корзина пуста"
+        return "🛒 <b>Your cart is empty</b>\n\nAdd products from catalog!"
     
-    text = "🛒 Ваша корзина:\n\n"
-    total = 0
+    message = "🛒 <b>Your cart:</b>\n\n"
     
     for item in cart_items:
-        item_total = item['product']['price'] * item['quantity']
-        text += f"• {item['product']['name']}\n"
-        text += f"  {item['quantity']} шт. × {format_price(item['product']['price'])} = {format_price(item_total)}\n\n"
-        total += item_total
+        message += f"• {item['name']}\n"
+        message += f"  Price: ${item['price']} x {item['quantity']} = ${item['total']}\n\n"
     
-    text += f"💰 Итого: {format_price(total)}"
-    return text
+    message += f"💰 <b>Total: ${total}</b>"
+    
+    return message
+
+def format_order_confirmation(cart_items: List[Dict], total: float, order_data: Dict) -> str:
+    """Order confirmation formatting"""
+    
+    message = "🛒 <b>Your order:</b>\n\n"
+    
+    for item in cart_items:
+        message += f"• {item['name']}\n"
+        message += f"  ${item['price']} x {item['quantity']} = ${item['total']}\n\n"
+    
+    message += f"💰 <b>Total: ${total}</b>\n\n"
+    
+    if order_data.get('promocode'):
+        message += f"🎫 <b>Promo code:</b> {order_data['promocode']}\n\n"
+    
+    message += f"📞 <b>Phone:</b> {order_data.get('phone', 'Not specified')}\n\n"
+    
+    # Format shipping address from separate fields
+    address_line = ""
+    
+    # Collect full address
+    name_parts = []
+    if order_data.get('first_name'):
+        name_parts.append(order_data['first_name'])
+    if order_data.get('last_name'):
+        name_parts.append(order_data['last_name'])
+    
+    address_components = []
+    if name_parts:
+        address_components.append(' '.join(name_parts))
+    
+    if order_data.get('street'):
+        street = order_data['street']
+        if order_data.get('apartment'):
+            street += f", {order_data['apartment']}"
+        address_components.append(street)
+    
+    location_parts = []
+    if order_data.get('city'):
+        location_parts.append(order_data['city'])
+    if order_data.get('us_state'):
+        location_parts.append(order_data['us_state'])
+    if order_data.get('zip_code'):
+        location_parts.append(order_data['zip_code'])
+    
+    if location_parts:
+        address_components.append(', '.join(location_parts))
+    
+    if order_data.get('company'):
+        address_components.append(f"({order_data['company']})")
+    
+    if address_components:
+        address_line = '\n'.join(address_components)
+    else:
+        address_line = "Not specified"
+    
+    message += f"📍 <b>Shipping address:</b>\n{address_line}"
+    
+    return message
 
 
 def format_price(price_kopecks: int) -> str:
-    """Форматирует цену из копеек в рубли"""
+    """Format price from kopecks to rubles"""
     rubles = price_kopecks // 100
     kopecks = price_kopecks % 100
     
@@ -58,7 +147,7 @@ def format_price(price_kopecks: int) -> str:
 
 
 def format_date(date_str: str) -> str:
-    """Форматирует дату для отображения"""
+    """Format date for display"""
     try:
         dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         return dt.strftime("%d.%m.%Y %H:%M")
@@ -67,7 +156,7 @@ def format_date(date_str: str) -> str:
 
 
 def get_status_emoji(status: str) -> str:
-    """Возвращает эмодзи для статуса заказа"""
+    """Return emoji for order status"""
     status_emojis = {
         'pending': '⏳',
         'confirmed': '✅',
@@ -80,8 +169,8 @@ def get_status_emoji(status: str) -> str:
 
 
 def format_user_info(user: Dict[str, Any]) -> str:
-    """Форматирует информацию о пользователе"""
-    text = f"👤 Пользователь: {user.get('first_name', 'Не указано')}"
+    """Format user information"""
+    text = f"👤 User: {user.get('first_name', 'Not specified')}"
     
     if user.get('last_name'):
         text += f" {user['last_name']}"
@@ -92,13 +181,13 @@ def format_user_info(user: Dict[str, Any]) -> str:
     text += f"\n📱 ID: {user['telegram_id']}"
     
     if user.get('phone'):
-        text += f"\n📞 Телефон: {user['phone']}"
+        text += f"\n📞 Phone: {user['phone']}"
     
     return text
 
 
 def pluralize(count: int, forms: List[str]) -> str:
-    """Склоняет слово в зависимости от числа"""
+    """Decline word depending on count"""
     if count % 10 == 1 and count % 100 != 11:
         return forms[0]
     elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
@@ -108,6 +197,6 @@ def pluralize(count: int, forms: List[str]) -> str:
 
 
 def format_quantity(count: int) -> str:
-    """Форматирует количество товаров"""
-    forms = ['товар', 'товара', 'товаров']
+    """Format product quantity"""
+    forms = ['product', 'products', 'products']
     return f"{count} {pluralize(count, forms)}"

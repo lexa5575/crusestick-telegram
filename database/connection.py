@@ -1,20 +1,37 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from config import settings
 
-from config import DATABASE_URL
+# Базовый класс для моделей
+class Base(DeclarativeBase):
+    pass
 
-Base = declarative_base()
+# Создаем движок БД
+engine = create_async_engine(
+    settings.database_url,
+    echo=settings.debug,
+    pool_size=10,
+    max_overflow=20
+)
 
-engine = create_async_engine(DATABASE_URL, echo=False)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
+# Создаем фабрику сессий
+async_session = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
 async def init_db():
+    """Инициализация БД"""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
+        # Создаем таблицы если их нет (опционально)
+        # await conn.run_sync(Base.metadata.create_all)
+        pass
 
 async def get_session() -> AsyncSession:
+    """Получение сессии БД"""
     async with async_session() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.close()
