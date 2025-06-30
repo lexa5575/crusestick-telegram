@@ -1,5 +1,15 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
+import os
+from dotenv import load_dotenv
+
+# Принудительно загружаем .env файл если он есть
+load_dotenv()
+
+# Отладочная информация
+print("DEBUG: Environment variables:")
+print(f"TELEGRAM_BOT_TOKEN exists: {'TELEGRAM_BOT_TOKEN' in os.environ}")
+print(f"TELEGRAM_BOT_TOKEN value length: {len(os.environ.get('TELEGRAM_BOT_TOKEN', ''))}")
 
 class Settings(BaseSettings):
     # Telegram Bot Token (from environment variable)
