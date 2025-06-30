@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     bot_token: str = Field(default="", env='TELEGRAM_BOT_TOKEN')
     
     # Laravel API URL
-    laravel_api_url: str = Field('http://localhost:8000', env='LARAVEL_API_URL')
+    laravel_api_url: str = Field('https://crusestick.com', env='LARAVEL_API_URL')
     
     # Debug mode
     debug: bool = Field(True, env='DEBUG')
