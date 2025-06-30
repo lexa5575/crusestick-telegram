@@ -16,8 +16,6 @@ class Settings(BaseSettings):
     debug: bool = True
     telegram_api_url: str = 'https://api.telegram.org'
     
-    # Заглушка для совместимости (не используется)
-    database_url: str = 'sqlite:///./temp.db'
     
     class Config:
         env_file = '.env'
