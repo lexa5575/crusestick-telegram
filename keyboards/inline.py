@@ -34,13 +34,22 @@ def categories_keyboard(categories: list) -> InlineKeyboardMarkup:
 
 def products_keyboard(products: list, category_id: int = None, page: int = 1) -> InlineKeyboardMarkup:
     """Keyboard with products"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     keyboard = []
     
     for product in products:
+        callback_data = f"product:{product['id']}"
+        # Проверяем длину callback_data (максимум 64 байта)
+        if len(callback_data.encode('utf-8')) > 64:
+            logger.warning(f"Callback data too long for product {product['id']}: {len(callback_data.encode('utf-8'))} bytes")
+        
+        logger.debug(f"Creating button for product {product['id']}: {callback_data}")
         keyboard.append([
             InlineKeyboardButton(
                 text=f"{product['name']} - ${product['price']}",
-                callback_data=f"product:{product['id']}"
+                callback_data=callback_data
             )
         ])
     

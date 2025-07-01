@@ -33,10 +33,14 @@ async def add_product_to_cart(callback: CallbackQuery):
         # Get product data from API
         async with api_client as client:
             products = await client.get_products()
+            logger.info(f"Total products received for cart: {len(products)}")
             product = next((p for p in products if p['id'] == product_id), None)
         
         if not product:
-            logger.warning(f"Product {product_id} not found")
+            logger.warning(f"Product {product_id} not found in {len(products)} products")
+            # Показать ID всех доступных товаров для отладки
+            available_ids = [p['id'] for p in products[:10]]  # Первые 10 для отладки
+            logger.info(f"Available product IDs (first 10): {available_ids}")
             await callback.answer("Product not found", show_alert=True)
             return
         

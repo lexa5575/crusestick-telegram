@@ -49,14 +49,23 @@ async def show_category_products(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("product:"))
 async def show_product_detail(callback: CallbackQuery):
     """Show product details"""
+    import logging
+    logger = logging.getLogger(__name__)
     
+    logger.info(f"Product detail requested: {callback.data}")
     product_id = int(callback.data.split(":")[1])
+    logger.info(f"Looking for product ID: {product_id}")
     
     async with api_client as client:
         products = await client.get_products()
+        logger.info(f"Total products received: {len(products)}")
         product = next((p for p in products if p['id'] == product_id), None)
     
     if not product:
+        logger.warning(f"Product {product_id} not found in {len(products)} products")
+        # Показать ID всех доступных товаров для отладки
+        available_ids = [p['id'] for p in products[:10]]  # Первые 10 для отладки
+        logger.info(f"Available product IDs (first 10): {available_ids}")
         await callback.answer("Product not found", show_alert=True)
         return
     
