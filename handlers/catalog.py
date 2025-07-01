@@ -57,12 +57,12 @@ async def show_product_detail(callback: CallbackQuery):
     logger.info(f"Looking for product ID: {product_id}")
     
     async with api_client as client:
-        # Сначала попробуем получить все товары
+        # First try to get all products
         products = await client.get_products()
         logger.info(f"Total products received from get_products(): {len(products)}")
         product = next((p for p in products if p['id'] == product_id), None)
         
-        # Если не нашли товар - попробуем поискать по категориям
+        # If product not found - try searching in categories
         if not product:
             logger.info(f"Product {product_id} not found in main list, searching in categories...")
             categories = await client.get_categories()

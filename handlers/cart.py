@@ -32,12 +32,12 @@ async def add_product_to_cart(callback: CallbackQuery):
         
         # Get product data from API
         async with api_client as client:
-            # Сначала попробуем получить все товары
+            # First try to get all products
             products = await client.get_products()
             logger.info(f"Total products received for cart: {len(products)}")
             product = next((p for p in products if p['id'] == product_id), None)
             
-            # Если не нашли товар - попробуем поискать по категориям
+            # If product not found - try searching in categories
             if not product:
                 logger.info(f"Product {product_id} not found in main list, searching in categories for cart...")
                 categories = await client.get_categories()
@@ -241,7 +241,7 @@ async def process_street(message: Message, state: FSMContext):
     street = message.text.strip()
     
     if len(street) < 5:
-        await message.answer("❌ Пожалуйста, введите корректный адрес улицы.")
+        await message.answer("❌ Please enter a valid street address.")
         return
     
     await state.update_data(street=street)
@@ -256,7 +256,7 @@ async def process_city(message: Message, state: FSMContext):
     city = message.text.strip()
     
     if len(city) < 2:
-        await message.answer("❌ Пожалуйста, введите корректное название города.")
+        await message.answer("❌ Please enter a valid city name.")
         return
     
     await state.update_data(city=city)
@@ -271,7 +271,7 @@ async def process_us_state(message: Message, state: FSMContext):
     us_state = message.text.strip().upper()
     
     if len(us_state) < 2:
-        await message.answer("❌ Пожалуйста, введите корректное сокращение штата (например: CA, NY, TX).")
+        await message.answer("❌ Please enter a valid state abbreviation (e.g.: CA, NY, TX).")
         return
     
     await state.update_data(us_state=us_state)
@@ -286,7 +286,7 @@ async def process_zip_code(message: Message, state: FSMContext):
     zip_code = message.text.strip()
     
     if not zip_code.isdigit() or len(zip_code) != 5:
-        await message.answer("❌ Пожалуйста, введите корректный ZIP код (5 цифр).")
+        await message.answer("❌ Please enter a valid ZIP code (5 digits).")
         return
     
     await state.update_data(zip_code=zip_code)
@@ -317,10 +317,10 @@ async def process_phone(message: Message, state: FSMContext):
     
     phone = message.text.strip()
     
-    if phone.lower() in ['пропустить', 'skip', '-']:
+    if phone.lower() in ['skip', '-']:
         phone = None
     elif phone and (not phone.startswith('+') or len(phone) < 10):
-        await message.answer("❌ Пожалуйста, введите корректный номер телефона или 'пропустить'.")
+        await message.answer("❌ Please enter a valid phone number or 'skip'.")
         return
     
     await state.update_data(phone=phone)
@@ -350,7 +350,7 @@ async def process_apartment(message: Message, state: FSMContext):
     
     apartment = message.text.strip()
     
-    if apartment.lower() in ['пропустить', 'skip', '-']:
+    if apartment.lower() in ['skip', '-']:
         apartment = None
     
     await state.update_data(apartment=apartment)
@@ -387,7 +387,7 @@ async def process_company(message: Message, state: FSMContext):
     
     company = message.text.strip()
     
-    if company.lower() in ['пропустить', 'skip', '-']:
+    if company.lower() in ['skip', '-']:
         company = None
     
     await state.update_data(company=company)
@@ -429,16 +429,16 @@ async def select_payment_method(callback: CallbackQuery, state: FSMContext):
         
         if discount_type == 'fixed':
             discount_amount = min(float(discount_value), cart_total)
-            promo_text = f"🎫 <b>Промокод:</b> {order_data['promocode']} (-${discount_amount:.2f})\n"
+            promo_text = f"🎫 <b>Promo code:</b> {order_data['promocode']} (-${discount_amount:.2f})\n"
         else:  # percentage
             discount_amount = cart_total * (float(discount_value) / 100)
-            promo_text = f"🎫 <b>Промокод:</b> {order_data['promocode']} (-{discount_value}%)\n"
+            promo_text = f"🎫 <b>Promo code:</b> {order_data['promocode']} (-{discount_value}%)\n"
         
         final_total = cart_total - discount_amount
         discount_text = (
             f"{promo_text}"
-            f"💰 <b>Скидка:</b> -${discount_amount:.2f}\n"
-            f"💵 <b>К оплате:</b> ${final_total:.2f}\n\n"
+            f"💰 <b>Discount:</b> -${discount_amount:.2f}\n"
+            f"💵 <b>Total to pay:</b> ${final_total:.2f}\n\n"
         )
     
     # Final order confirmation
@@ -447,7 +447,7 @@ async def select_payment_method(callback: CallbackQuery, state: FSMContext):
         f"{format_order_confirmation(cart_items, cart_total, order_data)}\n\n"
         f"{discount_text}"
         f"💳 <b>Payment method:</b> {payment_method.upper()}\n\n"
-        "Все данные корректны?"
+        "Is all information correct?"
     )
     
     await state.set_state(OrderStates.confirming_order)
@@ -491,8 +491,8 @@ async def handle_zelle_payment(callback: CallbackQuery, order_id: int, total_amo
     await callback.message.edit_text(
         payment_text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📦 Мои заказы", callback_data="my_orders")],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+            [InlineKeyboardButton(text="📦 My Orders", callback_data="my_orders")],
+            [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
         ])
     )
 
@@ -500,9 +500,9 @@ async def send_crypto_payment_info(callback: CallbackQuery, order_id: int, total
     """Send cryptocurrency payment information"""
     
     payment_text = (
-        f"✅ <b>Заказ #{order_id} создан!</b>\n\n"
-        f"💎 <b>Оплата криптовалютой</b>\n"
-        f"💰 Сумма к оплате: <b>${total_amount}</b>\n\n"
+        f"✅ <b>Order #{order_id} created!</b>\n\n"
+        f"💎 <b>Cryptocurrency Payment</b>\n"
+        f"💰 Amount to pay: <b>${total_amount}</b>\n\n"
         f"🔗 Для оплаты перейдите по ссылке:\n"
         f"👆 Ссылка будет сгенерирована автоматически\n\n"
         f"⏰ После оплаты средства поступят автоматически.\n"
@@ -513,8 +513,8 @@ async def send_crypto_payment_info(callback: CallbackQuery, order_id: int, total
         payment_text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💳 Оплатить", url=f"https://payment-link-for-order-{order_id}")],
-            [InlineKeyboardButton(text="📦 Мои заказы", callback_data="my_orders")],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+            [InlineKeyboardButton(text="📦 My Orders", callback_data="my_orders")],
+            [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
         ])
     )
 
@@ -591,9 +591,9 @@ async def process_promocode(message: Message, state: FSMContext):
             "✅ <b>Подтверждение заказа</b>\n\n"
             f"{format_order_confirmation(cart_items, cart_total, order_data)}\n\n"
             f"{discount_text}"
-            f"💰 <b>Скидка:</b> -${discount_amount:.2f}\n"
-            f"💵 <b>К оплате:</b> ${final_total:.2f}\n\n"
-            "Все данные корректны?"
+            f"💰 <b>Discount:</b> -${discount_amount:.2f}\n"
+            f"💵 <b>Total to pay:</b> ${final_total:.2f}\n\n"
+            "Is all information correct?"
         )
         
         await message.answer(
@@ -620,7 +620,7 @@ async def back_to_confirmation(callback: CallbackQuery, state: FSMContext):
     confirmation_text = (
         "✅ <b>Подтверждение заказа</b>\n\n"
         f"{format_order_confirmation(cart_items, cart_total, order_data)}\n\n"
-        "Все данные корректны?"
+        "Is all information correct?"
     )
     
     await callback.message.edit_text(
