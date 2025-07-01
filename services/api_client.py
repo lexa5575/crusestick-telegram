@@ -22,7 +22,7 @@ class LaravelAPIClient:
         """Базовый метод для HTTP запросов"""
         url = f"{self.base_url}/api/bot{endpoint}"
         
-        logger.debug(f"Making {method} request to {url}")
+        logger.info(f"Making {method} request to {url}")
         
         try:
             async with self.session.request(method, url, **kwargs) as response:
@@ -113,7 +113,7 @@ class LaravelAPIClient:
             'activity_data': activity_data
         }
         
-        response = await self._make_request('POST', '/user-activity', json_data=data)
+        response = await self._make_request('POST', '/user-activity', json=data)
         return response or {}
 
 # Глобальный экземпляр клиента

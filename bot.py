@@ -34,6 +34,8 @@ async def main():
     """Main bot startup function"""
     
     logger.info("Starting bot with token from environment...")
+    logger.info(f"Laravel API URL: {settings.laravel_api_url}")
+    logger.info(f"Admin IDs configured: {len(settings.admin_ids)} admins")
     
     # Проверяем токен
     if not settings.bot_token or len(settings.bot_token) < 10:
