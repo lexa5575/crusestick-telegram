@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def get_contact_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="📱 Поделиться контактом", request_contact=True)]
+        [KeyboardButton(text="📱 Share Contact", request_contact=True)]
     ]
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
@@ -14,7 +14,7 @@ def get_contact_keyboard() -> ReplyKeyboardMarkup:
 
 def get_location_keyboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton(text="📍 Поделиться местоположением", request_location=True)]
+        [KeyboardButton(text="📍 Share Location", request_location=True)]
     ]
     return ReplyKeyboardMarkup(
         keyboard=keyboard,
