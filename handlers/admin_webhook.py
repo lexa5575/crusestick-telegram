@@ -7,6 +7,10 @@ from services.api_client import api_client
 
 logger = logging.getLogger(__name__)
 
+async def health_check(request):
+    """Health check для пинга"""
+    return web.Response(text="Bot is alive! 🤖")
+
 async def send_zelle_to_user(request):
     """Обработчик для отправки Zelle реквизитов пользователю"""
     try:
@@ -145,9 +149,34 @@ async def send_reminder_to_user(request):
         logger.error(f"Error processing reminder request: {e}")
         return web.json_response({'success': False, 'error': str(e)}, status=500)
 
+async def webhook_security_middleware(request, handler):
+    """Middleware for webhook security (optional)"""
+    # Check webhook secret if configured
+    if settings.webhook_secret:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer ') or auth_header[7:] != settings.webhook_secret:
+            return web.json_response({'error': 'Unauthorized'}, status=401)
+    
+    # Check allowed origins if configured
+    if settings.allowed_webhook_origins:
+        origin = request.headers.get('Origin') or request.headers.get('Referer', '').split('/')[2]
+        if origin and origin not in settings.allowed_webhook_origins:
+            return web.json_response({'error': 'Origin not allowed'}, status=403)
+    
+    return await handler(request)
+
 def create_admin_app():
     """Создание HTTP приложения для админских команд"""
-    app = web.Application()
+    # Create middleware list
+    middlewares = []
+    if settings.webhook_secret or settings.allowed_webhook_origins:
+        middlewares.append(webhook_security_middleware)
+    
+    app = web.Application(middlewares=middlewares)
+    
+    # Health check endpoints
+    app.router.add_get('/', health_check)  # Главная страница
+    app.router.add_get('/health', health_check)  # Альтернативный endpoint
     
     # Добавляем маршруты
     app.router.add_post('/admin/zelle', send_zelle_to_user)

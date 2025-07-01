@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -24,10 +25,11 @@ async def start_admin_server():
     runner = web.AppRunner(app)
     await runner.setup()
     
-    # Start on port 8081 (bind to all interfaces for Render)
-    site = web.TCPSite(runner, '0.0.0.0', 8081)
+    # Render передает правильный порт через переменную PORT
+    port = int(os.environ.get('PORT', 8081))
+    site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
-    logger.info("Admin HTTP server started on http://0.0.0.0:8081")
+    logger.info(f"Admin HTTP server started on http://0.0.0.0:{port}")
     return runner
 
 async def main():
