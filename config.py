@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+from pydantic import Field
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Bot webhook URL for Laravel callbacks
     bot_webhook_url: str = Field(default="", env='BOT_WEBHOOK_URL')
     
-    @property
+    @property  
     def admin_ids(self) -> List[int]:
         """Parse admin IDs from comma-separated string"""
         if not self.admin_ids_str.strip():
@@ -42,34 +42,7 @@ class Settings(BaseSettings):
     
     # Optional webhook security settings
     webhook_secret: Optional[str] = Field(default=None, env='WEBHOOK_SECRET')
-    allowed_webhook_origins: List[str] = Field(default_factory=list, env='ALLOWED_WEBHOOK_ORIGINS')
-
-    @field_validator('admin_ids', mode='before')
-    @classmethod
-    def parse_admin_ids(cls, v):
-        """Parse comma-separated admin IDs string into list of integers"""
-        if isinstance(v, str):
-            if not v.strip():
-                return []
-            try:
-                return [int(x.strip()) for x in v.split(',') if x.strip()]
-            except ValueError:
-                return []
-        elif isinstance(v, list):
-            return v
-        return []
-    
-    @field_validator('allowed_webhook_origins', mode='before')
-    @classmethod
-    def parse_allowed_origins(cls, v):
-        """Parse comma-separated origins string into list"""
-        if isinstance(v, str):
-            if not v.strip():
-                return []
-            return [x.strip() for x in v.split(',') if x.strip()]
-        elif isinstance(v, list):
-            return v
-        return []
+    allowed_webhook_origins: str = Field(default="", env='ALLOWED_WEBHOOK_ORIGINS')
 
     class Config:
         env_file = '.env'
