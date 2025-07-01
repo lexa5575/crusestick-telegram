@@ -57,15 +57,18 @@ async def show_product_detail(callback: CallbackQuery):
     logger.info(f"Looking for product ID: {product_id}")
     
     async with api_client as client:
-        products = await client.get_products()
-        logger.info(f"Total products received: {len(products)}")
-        product = next((p for p in products if p['id'] == product_id), None)
+        # Попробуем сначала получить товар по ID (более эффективно)
+        product = await client.get_product(product_id)
+        
+        if not product:
+            # Fallback: получаем все товары если API не поддерживает get_product
+            logger.info("Fallback to get_products()")
+            products = await client.get_products()
+            logger.info(f"Total products received: {len(products)}")
+            product = next((p for p in products if p['id'] == product_id), None)
     
     if not product:
-        logger.warning(f"Product {product_id} not found in {len(products)} products")
-        # Показать ID всех доступных товаров для отладки
-        available_ids = [p['id'] for p in products[:10]]  # Первые 10 для отладки
-        logger.info(f"Available product IDs (first 10): {available_ids}")
+        logger.warning(f"Product {product_id} not found")
         await callback.answer("Product not found", show_alert=True)
         return
     

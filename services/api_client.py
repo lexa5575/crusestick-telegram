@@ -46,16 +46,26 @@ class LaravelAPIClient:
             logger.error(f"Unexpected API request error: {e}")
             return {}
     
-    async def get_products(self, category_id: Optional[int] = None, search: Optional[str] = None) -> List[Dict]:
+    async def get_products(self, category_id: Optional[int] = None, search: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
         """Получение списка товаров"""
         params = {}
         if category_id:
             params['category_id'] = category_id
         if search:
             params['search'] = search
+        if limit:
+            params['limit'] = limit
+        else:
+            # По умолчанию запрашиваем больше товаров или все
+            params['limit'] = 1000  # Большой лимит для получения всех товаров
             
         response = await self._make_request('GET', '/products', params=params)
         return response.get('data', [])
+    
+    async def get_product(self, product_id: int) -> Optional[Dict]:
+        """Получение одного товара по ID"""
+        response = await self._make_request('GET', f'/products/{product_id}')
+        return response.get('data') if response else None
     
     async def get_categories(self) -> List[Dict]:
         """Получение категорий"""
