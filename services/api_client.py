@@ -56,8 +56,10 @@ class LaravelAPIClient:
         if limit:
             params['limit'] = limit
         else:
-            # По умолчанию запрашиваем больше товаров или все
-            params['limit'] = 1000  # Большой лимит для получения всех товаров
+            # Пробуем разные параметры для получения всех товаров
+            params['per_page'] = 1000  # Laravel обычно использует per_page
+            params['limit'] = 1000     # На всякий случай
+            params['all'] = 'true'     # Иногда используется параметр all
             
         response = await self._make_request('GET', '/products', params=params)
         return response.get('data', [])
