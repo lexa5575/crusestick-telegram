@@ -32,10 +32,21 @@ async def add_product_to_cart(callback: CallbackQuery):
         
         # Get product data from API
         async with api_client as client:
-            # Получаем все товары с улучшенными параметрами
+            # Сначала попробуем получить все товары
             products = await client.get_products()
             logger.info(f"Total products received for cart: {len(products)}")
             product = next((p for p in products if p['id'] == product_id), None)
+            
+            # Если не нашли товар - попробуем поискать по категориям
+            if not product:
+                logger.info(f"Product {product_id} not found in main list, searching in categories for cart...")
+                categories = await client.get_categories()
+                for category in categories:
+                    category_products = await client.get_products(category_id=category['id'])
+                    product = next((p for p in category_products if p['id'] == product_id), None)
+                    if product:
+                        logger.info(f"Found product {product_id} in category {category['id']} for cart")
+                        break
         
         if not product:
             logger.warning(f"Product {product_id} not found for cart")
