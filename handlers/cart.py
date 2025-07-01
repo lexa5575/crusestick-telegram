@@ -503,16 +503,16 @@ async def send_crypto_payment_info(callback: CallbackQuery, order_id: int, total
         f"✅ <b>Order #{order_id} created!</b>\n\n"
         f"💎 <b>Cryptocurrency Payment</b>\n"
         f"💰 Amount to pay: <b>${total_amount}</b>\n\n"
-        f"🔗 Для оплаты перейдите по ссылке:\n"
-        f"👆 Ссылка будет сгенерирована автоматически\n\n"
-        f"⏰ После оплаты средства поступят автоматически.\n"
-        f"📱 Вы получите уведомление о подтверждении платежа."
+        f"🔗 To pay, follow the link:\n"
+        f"👆 Payment link will be generated automatically\n\n"
+        f"⏰ After payment, funds will be credited automatically.\n"
+        f"📱 You will receive payment confirmation notification."
     )
     
     await callback.message.edit_text(
         payment_text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💳 Оплатить", url=f"https://payment-link-for-order-{order_id}")],
+            [InlineKeyboardButton(text="💳 Pay Now", url=f"https://payment-link-for-order-{order_id}")],
             [InlineKeyboardButton(text="📦 My Orders", callback_data="my_orders")],
             [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
         ])
@@ -525,10 +525,10 @@ async def enter_promocode(callback: CallbackQuery, state: FSMContext):
     await state.set_state(OrderStates.entering_promocode_code)
     
     await callback.message.edit_text(
-        "🎫 <b>Введите промокод</b>\n\n"
-        "Отправьте код для получения скидки:",
+        "🎫 <b>Enter promo code</b>\n\n"
+        "Send code to get discount:",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="◀️ Назад к заказу", callback_data="back_to_confirmation")]
+            [InlineKeyboardButton(text="◀️ Back to Order", callback_data="back_to_confirmation")]
         ])
     )
 
@@ -560,12 +560,12 @@ async def process_promocode(message: Message, state: FSMContext):
         # Format message depending on discount type
         if discount_type == 'fixed':
             await message.answer(
-                f"✅ Promocode <b>{promocode}</b> применен!\n"
+                f"✅ Promocode <b>{promocode}</b> applied!\n"
                 f"💰 Fix Discount: ${discount_value}"
             )
         else:  # percentage
             await message.answer(
-                f"✅ Promocode <b>{promocode}</b> применен!\n"
+                f"✅ Promocode <b>{promocode}</b> applied!\n"
                 f"💰 Discount: {discount_value}%"
             )
         
@@ -588,7 +588,7 @@ async def process_promocode(message: Message, state: FSMContext):
         final_total = cart_total - discount_amount
         
         confirmation_text = (
-            "✅ <b>Подтверждение заказа</b>\n\n"
+            "✅ <b>Order Confirmation</b>\n\n"
             f"{format_order_confirmation(cart_items, cart_total, order_data)}\n\n"
             f"{discount_text}"
             f"💰 <b>Discount:</b> -${discount_amount:.2f}\n"
@@ -618,7 +618,7 @@ async def back_to_confirmation(callback: CallbackQuery, state: FSMContext):
     order_data = await state.get_data()
     
     confirmation_text = (
-        "✅ <b>Подтверждение заказа</b>\n\n"
+        "✅ <b>Order Confirmation</b>\n\n"
         f"{format_order_confirmation(cart_items, cart_total, order_data)}\n\n"
         "Is all information correct?"
     )

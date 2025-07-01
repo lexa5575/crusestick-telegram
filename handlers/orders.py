@@ -30,8 +30,8 @@ async def show_my_orders(callback: CallbackQuery):
                 "У вас пока нет заказов.\n"
                 "Оформите первый заказ в нашем каталоге!",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                    [InlineKeyboardButton(text="🛍️ Каталог товаров", callback_data="catalog")],
-                    [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
+                    [InlineKeyboardButton(text="🛍️ Product Catalog", callback_data="catalog")],
+                    [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
                 ])
             )
             return
@@ -49,14 +49,14 @@ async def show_my_orders(callback: CallbackQuery):
         if last_order.get('tracking_number'):
             keyboard.append([
                 InlineKeyboardButton(
-                    text="📦 Отследить на USPS", 
+                    text="📦 Track on USPS", 
                     url=f"https://tools.usps.com/go/TrackConfirmAction?tLabels={last_order['tracking_number']}"
                 )
             ])
         
         # Reorder button
         keyboard.append([
-            InlineKeyboardButton(text="🔄 Перезаказать", callback_data=f"reorder:{last_order['id']}")
+            InlineKeyboardButton(text="🔄 Reorder", callback_data=f"reorder:{last_order['id']}")
         ])
         
         # Main menu
@@ -196,7 +196,7 @@ async def handle_reorder(callback: CallbackQuery, state: FSMContext):
                 break
         
         if not target_order:
-            await callback.answer("Заказ не найден", show_alert=True)
+            await callback.answer("Order not found", show_alert=True)
             return
         
         # Clear cart
@@ -277,4 +277,4 @@ async def handle_reorder(callback: CallbackQuery, state: FSMContext):
         
     except Exception as e:
         logger.error(f"Error processing reorder: {e}")
-        await callback.answer("Ошибка при обработке перезаказа", show_alert=True)
+        await callback.answer("Error processing reorder", show_alert=True)

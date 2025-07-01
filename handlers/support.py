@@ -146,4 +146,4 @@ async def cancel_support(callback: CallbackQuery, state: FSMContext):
         "Если передумаете, вы всегда можете обратиться к нам через раздел помощи.",
         reply_markup=back_to_menu_keyboard()
     )
-    await callback.answer("Обращение отменено")
+    await callback.answer("Request cancelled")
