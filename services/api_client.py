@@ -22,7 +22,7 @@ class LaravelAPIClient:
         """Базовый метод для HTTP запросов"""
         url = f"{self.base_url}/api/bot{endpoint}"
         
-        logger.info(f"Making {method} request to {url}")
+        logger.debug(f"Making {method} request to {url}")
         
         try:
             async with self.session.request(method, url, **kwargs) as response:
